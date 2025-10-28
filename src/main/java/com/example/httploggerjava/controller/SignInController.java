@@ -2,6 +2,8 @@ package com.example.httploggerjava.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,22 +17,22 @@ public class SignInController {
     private final Random random = new Random();
 
     @PostMapping("/signin")
-    public ResponseEntity<String> signIn(@RequestHeader Map<String, String> headers) {
+    public ResponseEntity<Map<String, Object>> signIn(@RequestHeader Map<String, String> headers) {
+        log.info("========================================");
         log.info("Received /signin request with headers:");
         headers.forEach((key, value) -> log.info("{}: {}", key, value));
-
+        log.info("========================================");
         // generate a random 10-digit number
         long randomValue = 1_000_000_000L + random.nextLong(9_000_000_000L);
-
-        return ResponseEntity
-                .ok()
-                .header("Cookie", String.valueOf(randomValue))
-                .body("Signed in successfully!");
-    }
-
-    // Optional: also allow GET for quick browser testing
-    @GetMapping("/signin")
-    public ResponseEntity<String> signInGet(@RequestHeader Map<String, String> headers) {
-        return signIn(headers);
+        ResponseCookie cookie = ResponseCookie.from("session-cookie", String.valueOf(randomValue))
+                .build();
+        log.info("!!!!! Cookie created: {} !!!!!", cookie);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of(
+                        "ok", true,
+                        "txRefId", "",
+                        "sessionId", ""
+                ));
     }
 }
